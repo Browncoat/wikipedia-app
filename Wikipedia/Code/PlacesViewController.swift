@@ -2147,6 +2147,11 @@ class PlacesViewController: ViewController, UISearchBarDelegate, ArticlePopoverV
         zoomAndPanMapView(toLocation: userLocation)
     }
     
+    @objc public func recenterOnCustomLocation(location: CLLocation) {
+        currentSearch = nil
+        zoomAndPanMapView(toLocation: location)
+    }
+    
     // MARK: - NSFetchedResultsControllerDelegate
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {

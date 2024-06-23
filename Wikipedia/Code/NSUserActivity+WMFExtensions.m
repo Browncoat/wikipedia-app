@@ -3,6 +3,7 @@
 
 @import CoreSpotlight;
 @import MobileCoreServices;
+@import MapKit;
 
 NSString *const WMFNavigateToActivityNotification = @"WMFNavigateToActivityNotification";
 
@@ -62,6 +63,23 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
 + (instancetype)wmf_placesActivityWithURL:(NSURL *)activityURL {
     NSURLComponents *components = [NSURLComponents componentsWithURL:activityURL resolvingAgainstBaseURL:NO];
     NSURL *articleURL = nil;
+    NSString *latitude = nil;
+    NSString *longitude = nil;
+    
+    for (NSURLQueryItem *item in components.queryItems) {
+        if ([item.name isEqualToString:@"lat"]) {
+            latitude = item.value;
+            break;
+        }
+    }
+    
+    for (NSURLQueryItem *item in components.queryItems) {
+        if ([item.name isEqualToString:@"lon"]) {
+            longitude = item.value;
+            break;
+        }
+    }
+    
     for (NSURLQueryItem *item in components.queryItems) {
         if ([item.name isEqualToString:@"WMFArticleURL"]) {
             NSString *articleURLString = item.value;
@@ -69,7 +87,9 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
             break;
         }
     }
+        
     NSUserActivity *activity = [self wmf_pageActivityWithName:@"Places"];
+    activity.userInfo = @{@"WMFLocation": @{@"lat": latitude, @"lon": longitude}, @"WMFPage": activity.userInfo[@"WMFPage"]};
     activity.webpageURL = articleURL;
     return activity;
 }
@@ -266,6 +286,13 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
 
 - (NSURL *)wmf_contentURL {
     return self.userInfo[@"WMFURL"];
+}
+
+- (CLLocation *)wmf_location {
+    NSDictionary* coordinates = self.userInfo[@"WMFLocation"];
+    CLLocation *location = [[CLLocation alloc] initWithLatitude:[coordinates[@"lat"] doubleValue] longitude:[coordinates[@"lon"] doubleValue]];
+
+    return location;
 }
 
 + (NSURLComponents *)wmf_baseURLComponentsForActivityOfType:(WMFUserActivityType)type {
